@@ -9,12 +9,13 @@ const userModel = require('./userModel')
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 const PORT = process.env.PORT || 3031;
 
 //FIRST: YOU NEED TO CONNECT THE SERVER WITH MONGODB USING MONGOOSE
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/books', {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect('mongodb://localhost:27017/books', { useNewUrlParser: true, useUnifiedTopology: true });
 
 //SECOND YOU NEED TO CREATE THE SCHEMA 
 // const bookSchema = new mongoose.Schema({
@@ -115,32 +116,74 @@ mongoose.connect('mongodb://localhost:27017/books', {useNewUrlParser: true, useU
 
 
 //http://localhost:3031/ hoom root
-app.get('/',handleingHome);
+app.get('/', handleingHome);
 
-function handleingHome(req,res){
+function handleingHome(req, res) {
     res.send('Hello requester I am ready');
 }
 //http://localhost:3031/books?email=
-app.get('/books',handleingProof);
+app.get('/books', handleingProof);
+app.post('/addbooks', handleingPost);
+//http://localhost:3031/deletebooks/1?email=
+app.delete('/deletebooks/:index', handelingdelete)
 
 
+function handleingProof(req, res) {
+    let emailAdress = req.query.email;
+    userModel.find({ email: emailAdress }, function (err, userData) {
+        if (err) {
+            res.send('Oops , something went error')
+        } else {
+            res.send(userData[0].books);
+        }
+    })
 
-function handleingProof(req,res){
-let emailAdress = req.query.email;
-userModel.find({email:emailAdress}, function(err,userData){
-if(err){
-    res.send('Oops , something went error')
-} else{
-    res.send(userData[0].books);
+
 }
-})
+function handleingPost(req, res) {
+    let newBook = req.body.book;
+    let newEmail = req.body.email;
 
+    userModel.find({ email: newEmail }, function (err, userData) {
+        if (err) {
+            res.send(err.message)
+        } else {
+            userData[0].books.push(newBook);
+            userData[0].save();
+            res.send(userData[0].books)
+            // userData.books
+        }
+    })
 
 }
-app.get('*',(req,resp)=>{
+
+function handelingdelete(req, res) {
+    let newIndex = req.params.index;
+    let newEmail = req.query.email;
+    userModel.find({ email: newEmail }, function (err, userData) {
+        if (err) {
+            res.send(err.message)
+
+        }
+        else {
+            userData[0].books.splice(newIndex, 1);
+            userData[0].save();
+            res.send(userData[0].books);
+        }
+    })
+
+}
+
+
+
+
+
+
+app.get('*', (req, resp) => {
     resp.send('error not found')
 })
 //LISTENING TO THE PORT
-app.listen(PORT,()=>{
-console.log(`listening to u :)`);
+app.listen(PORT, () => {
+    console.log(`listening to u :)`);
 })
+
