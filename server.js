@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3031;
 
 //FIRST: YOU NEED TO CONNECT THE SERVER WITH MONGODB USING MONGOOSE
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/books', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(`mongodb://hayabalasmeh:1234@cluster0-shard-00-00.svu8n.mongodb.net:27017,cluster0-shard-00-01.svu8n.mongodb.net:27017,cluster0-shard-00-02.svu8n.mongodb.net:27017/myFirstDatabase?ssl=true&replicaSet=atlas-lh448p-shard-0&authSource=admin&retryWrites=true&w=majority`, { useNewUrlParser: true, useUnifiedTopology: true });
 
 //SECOND YOU NEED TO CREATE THE SCHEMA 
 // const bookSchema = new mongoose.Schema({
@@ -125,7 +125,9 @@ function handleingHome(req, res) {
 app.get('/books', handleingProof);
 app.post('/addbooks', handleingPost);
 //http://localhost:3031/deletebooks/1?email=
-app.delete('/deletebooks/:index', handelingdelete)
+app.delete('/deletebooks/:index', handelingdelete);
+//http://localhost:3031/updatebook/3
+app.put('/updatebook/:index', handleingUpdate);
 
 
 function handleingProof(req, res) {
@@ -174,7 +176,24 @@ function handelingdelete(req, res) {
 
 }
 
+function handleingUpdate(req, res) {
+    let newIndex = req.params.index;
+    let updateBook = req.body.book;
+    let newEmail = req.body.email;
+    userModel.find({ email: newEmail }, function (err, userData) {
+        if (err) {
+            res.send(err.message)
 
+        }
+        else {
+
+            userData[0].books.splice(newIndex, 1, updateBook);
+            console.log(userData[0].books)
+            userData[0].save();
+            res.send(userData[0].books)
+        }
+    })
+}
 
 
 
